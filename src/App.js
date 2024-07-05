@@ -21,7 +21,7 @@ const App = () => {
   useEffect(() => {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/dark-v10',
       center: [136, 38.5],
       zoom: 4.5
     });
@@ -46,6 +46,11 @@ const App = () => {
 
   return (
     <div className="App">
+      <header className="header">
+        <div>
+          <h1>Site Title</h1>
+        </div>
+      </header>
       <div className="map-container" ref={mapContainerRef} style={{ width: '100%', height: '100vh' }} />
     </div>
   );
