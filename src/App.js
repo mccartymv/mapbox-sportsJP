@@ -22,8 +22,8 @@ const App = () => {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/dark-v10',
-      center: [136, 38.5],
-      zoom: 4.5
+      center: [136, 34.5],
+      zoom: 4.2
     });
 
     games.forEach(game => {
