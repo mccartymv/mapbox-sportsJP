@@ -155,7 +155,14 @@ const App = () => {
           <h1>Site Title</h1>
         </div>
       </header>
-      <div className="map-container" ref={mapContainerRef} style={{ width: '100%', height: '100vh' }} />
+      <div className="map-container" ref={mapContainerRef} />
+      <div className="footer">
+        <div className="footer-links">
+          <a href="/terms" className="unselectable">Terms and Conditions</a>
+          <a href="/privacy" className="unselectable">Privacy Policy</a>
+          <a href="/about" className="unselectable">About</a>
+        </div>
+      </div>
     </div>
   );
 };
