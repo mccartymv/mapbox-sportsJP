@@ -19,6 +19,23 @@ class CustomButtonControl {
     startDate.style.fontSize = '14px';
     startDate.style.padding = '5px';
     startDate.style.borderRight = '1px solid #ccc';
+    startDate.style.cursor = 'pointer';
+
+    // Hidden Date Input for Start Date
+    const startDateInput = document.createElement('input');
+    startDateInput.type = 'date';
+    startDateInput.style.display = 'none';
+    startDateInput.onchange = (event) => {
+      const date = new Date(event.target.value);
+      const options = { month: 'short', day: 'numeric' };
+      startDate.textContent = date.toLocaleDateString('en-US', options).toUpperCase();
+      startDateInput.style.display = 'none';
+    };
+
+    startDate.onclick = () => {
+      startDateInput.style.display = 'block';
+      startDateInput.focus();
+    };
 
     // Slider Container
     const sliderContainer = document.createElement('div');
@@ -50,11 +67,30 @@ class CustomButtonControl {
     endDate.style.fontSize = '14px';
     endDate.style.padding = '5px';
     endDate.style.borderLeft = '1px solid #ccc';
+    endDate.style.cursor = 'pointer';
+
+    // Hidden Date Input for End Date
+    const endDateInput = document.createElement('input');
+    endDateInput.type = 'date';
+    endDateInput.style.display = 'none';
+    endDateInput.onchange = (event) => {
+      const date = new Date(event.target.value);
+      const options = { month: 'short', day: 'numeric' };
+      endDate.textContent = date.toLocaleDateString('en-US', options).toUpperCase();
+      endDateInput.style.display = 'none';
+    };
+
+    endDate.onclick = () => {
+      endDateInput.style.display = 'block';
+      endDateInput.focus();
+    };
 
     this._container.appendChild(startDate);
+    this._container.appendChild(startDateInput); // Append the hidden start date input
     sliderContainer.appendChild(slider);
     this._container.appendChild(sliderContainer);
     this._container.appendChild(endDate);
+    this._container.appendChild(endDateInput); // Append the hidden end date input
 
     return this._container;
   }
