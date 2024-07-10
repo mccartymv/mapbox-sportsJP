@@ -21,6 +21,15 @@ class CustomButtonControl {
       </div>`;
     };
 
+    // Helper function to format date
+    const formatDate = (date) => {
+      const options = { month: 'short', day: 'numeric' };
+      return {
+        month: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        day: date.getDate(),
+      };
+    };
+
     // Start Date
     const startDate = document.createElement('div');
     setDateContent(startDate, 'JUL', '10');
@@ -35,8 +44,8 @@ class CustomButtonControl {
     startDateInput.style.display = 'none';
     startDateInput.onchange = (event) => {
       const date = new Date(event.target.value);
-      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-      const day = date.getDate();
+      date.setHours(date.getHours() + 12); // Set time to noon
+      const { month, day } = formatDate(date);
       setDateContent(startDate, month, day);
       startDateInput.style.display = 'none';
     };
@@ -84,8 +93,8 @@ class CustomButtonControl {
     endDateInput.style.display = 'none';
     endDateInput.onchange = (event) => {
       const date = new Date(event.target.value);
-      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-      const day = date.getDate();
+      date.setHours(date.getHours() + 12); // Set time to noon
+      const { month, day } = formatDate(date);
       setDateContent(endDate, month, day);
       endDateInput.style.display = 'none';
     };
