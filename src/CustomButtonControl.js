@@ -13,9 +13,17 @@ class CustomButtonControl {
     this._container.style.border = '1px solid #ccc';
     this._container.style.borderRadius = '5px';
 
+    // Helper function to set date content
+    const setDateContent = (element, month, day) => {
+      element.innerHTML = `<div style="text-align: center;">
+        <div style="font-size: 12px;">${month}</div>
+        <div style="font-size: 24px; font-weight: bold;">${day}</div>
+      </div>`;
+    };
+
     // Start Date
     const startDate = document.createElement('div');
-    startDate.textContent = 'JUL 10';
+    setDateContent(startDate, 'JUL', '10');
     startDate.style.fontSize = '14px';
     startDate.style.padding = '5px';
     startDate.style.borderRight = '1px solid #ccc';
@@ -27,8 +35,9 @@ class CustomButtonControl {
     startDateInput.style.display = 'none';
     startDateInput.onchange = (event) => {
       const date = new Date(event.target.value);
-      const options = { month: 'short', day: 'numeric' };
-      startDate.textContent = date.toLocaleDateString('en-US', options).toUpperCase();
+      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const day = date.getDate();
+      setDateContent(startDate, month, day);
       startDateInput.style.display = 'none';
     };
 
@@ -63,7 +72,7 @@ class CustomButtonControl {
 
     // End Date
     const endDate = document.createElement('div');
-    endDate.textContent = 'JUL 19';
+    setDateContent(endDate, 'JUL', '19');
     endDate.style.fontSize = '14px';
     endDate.style.padding = '5px';
     endDate.style.borderLeft = '1px solid #ccc';
@@ -75,8 +84,9 @@ class CustomButtonControl {
     endDateInput.style.display = 'none';
     endDateInput.onchange = (event) => {
       const date = new Date(event.target.value);
-      const options = { month: 'short', day: 'numeric' };
-      endDate.textContent = date.toLocaleDateString('en-US', options).toUpperCase();
+      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const day = date.getDate();
+      setDateContent(endDate, month, day);
       endDateInput.style.display = 'none';
     };
 
