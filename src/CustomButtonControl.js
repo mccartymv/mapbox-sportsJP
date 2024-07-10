@@ -6,20 +6,56 @@ class CustomButtonControl {
     this._map = map;
     this._container = document.createElement('div');
     this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    this._container.style.display = 'flex';
+    this._container.style.alignItems = 'center';
+    this._container.style.padding = '5px';
+    this._container.style.backgroundColor = 'white';
+    this._container.style.border = '1px solid #ccc';
+    this._container.style.borderRadius = '5px';
 
-    const button = document.createElement('button');
-    button.textContent = 'Click Me';
-    button.style.backgroundColor = 'grey';
-    button.style.color = 'white';
-    button.style.border = 'none';
-    button.style.padding = '10px';
-    button.style.cursor = 'pointer';
+    // Start Date
+    const startDate = document.createElement('div');
+    startDate.textContent = 'JUL 10';
+    startDate.style.fontSize = '14px';
+    startDate.style.padding = '5px';
+    startDate.style.borderRight = '1px solid #ccc';
 
-    button.onclick = () => {
-      console.log('Button clicked!');
-    };
+    // Slider Container
+    const sliderContainer = document.createElement('div');
+    sliderContainer.style.display = 'flex';
+    sliderContainer.style.alignItems = 'center';
+    sliderContainer.style.flexGrow = '1';
+    sliderContainer.style.padding = '0 10px';
 
-    this._container.appendChild(button);
+    // Slider
+    const slider = document.createElement('div');
+    slider.style.height = '10px';
+    slider.style.width = '100%';
+    slider.style.backgroundColor = '#d3d3d3';
+    slider.style.position = 'relative';
+
+    const thumb = document.createElement('div');
+    thumb.style.height = '20px';
+    thumb.style.width = '20px';
+    thumb.style.backgroundColor = 'black';
+    thumb.style.borderRadius = '50%';
+    thumb.style.position = 'absolute';
+    thumb.style.left = '0';
+
+    slider.appendChild(thumb);
+
+    // End Date
+    const endDate = document.createElement('div');
+    endDate.textContent = 'JUL 19';
+    endDate.style.fontSize = '14px';
+    endDate.style.padding = '5px';
+    endDate.style.borderLeft = '1px solid #ccc';
+
+    this._container.appendChild(startDate);
+    sliderContainer.appendChild(slider);
+    this._container.appendChild(sliderContainer);
+    this._container.appendChild(endDate);
+
     return this._container;
   }
 
