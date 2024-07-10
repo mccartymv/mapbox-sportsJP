@@ -16,7 +16,7 @@ class CustomButtonControl {
     // Helper function to set date content
     const setDateContent = (element, month, day) => {
       element.innerHTML = `<div style="text-align: center;">
-        <div style="font-size: 12px;">${month}</div>
+        <div style="font-size: 16px; font-weight: bold;">${month}</div>
         <div style="font-size: 24px; font-weight: bold;">${day}</div>
       </div>`;
     };
