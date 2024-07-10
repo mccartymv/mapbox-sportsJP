@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import './App.css';
 import { getGames } from './GameService';
+import CustomButtonControl from './CustomButtonControl';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWJhZG5hcjQ1IiwiYSI6ImNseTkwMWQ4cDBrcG8yanBuNmV4ZnJiZDQifQ.EkfYeLvS7KYopWt5ULdZ9g';
 
@@ -27,6 +28,7 @@ const App = () => {
     });
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new CustomButtonControl(), 'top-left');
 
     if (games.length > 0) {
       const geojson = {
