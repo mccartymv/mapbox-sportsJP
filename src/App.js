@@ -118,8 +118,10 @@ const App = () => {
 
               map.easeTo({
                 center: features[0].geometry.coordinates,
-                zoom: zoom,
-                duration: 1500
+                  zoom: zoom,
+                  duration: 1300, // Duration of the animation in milliseconds
+                  essential: true, // Whether the animation is essential
+                  easing: (t) => t * (2 - t) // Custom easing function
               });
             }
           );
