@@ -1,5 +1,7 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 class CustomButtonControl {
   onAdd(map) {
@@ -23,7 +25,6 @@ class CustomButtonControl {
 
     // Helper function to format date
     const formatDate = (date) => {
-      const options = { month: 'short', day: 'numeric' };
       return {
         month: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
         day: date.getDate(),
@@ -38,22 +39,35 @@ class CustomButtonControl {
     startDate.style.borderRight = '1px solid #ccc';
     startDate.style.cursor = 'pointer';
 
-    // Hidden Date Input for Start Date
-    const startDateInput = document.createElement('input');
-    startDateInput.type = 'date';
-    startDateInput.style.display = 'none';
-    startDateInput.onchange = (event) => {
-      const date = new Date(event.target.value);
-      date.setHours(date.getHours() + 12); // Set time to noon
-      const { month, day } = formatDate(date);
-      setDateContent(startDate, month, day);
-      startDateInput.style.display = 'none';
-    };
+    // End Date
+    const endDate = document.createElement('div');
+    setDateContent(endDate, 'JUL', '19');
+    endDate.style.fontSize = '14px';
+    endDate.style.padding = '5px';
+    endDate.style.borderLeft = '1px solid #ccc';
+    endDate.style.cursor = 'pointer';
 
-    startDate.onclick = () => {
-      startDateInput.style.display = 'block';
-      startDateInput.focus();
-    };
+    // Initialize flatpickr for start date
+    flatpickr(startDate, {
+      onChange: (selectedDates) => {
+        const date = selectedDates[0];
+        date.setHours(date.getHours() + 12); // Set time to noon
+        const { month, day } = formatDate(date);
+        setDateContent(startDate, month, day);
+      },
+      defaultDate: '2023-07-10', // Set a default date if needed
+    });
+
+    // Initialize flatpickr for end date
+    flatpickr(endDate, {
+      onChange: (selectedDates) => {
+        const date = selectedDates[0];
+        date.setHours(date.getHours() + 12); // Set time to noon
+        const { month, day } = formatDate(date);
+        setDateContent(endDate, month, day);
+      },
+      defaultDate: '2023-07-19', // Set a default date if needed
+    });
 
     // Slider Container
     const sliderContainer = document.createElement('div');
@@ -79,37 +93,10 @@ class CustomButtonControl {
 
     slider.appendChild(thumb);
 
-    // End Date
-    const endDate = document.createElement('div');
-    setDateContent(endDate, 'JUL', '19');
-    endDate.style.fontSize = '14px';
-    endDate.style.padding = '5px';
-    endDate.style.borderLeft = '1px solid #ccc';
-    endDate.style.cursor = 'pointer';
-
-    // Hidden Date Input for End Date
-    const endDateInput = document.createElement('input');
-    endDateInput.type = 'date';
-    endDateInput.style.display = 'none';
-    endDateInput.onchange = (event) => {
-      const date = new Date(event.target.value);
-      date.setHours(date.getHours() + 12); // Set time to noon
-      const { month, day } = formatDate(date);
-      setDateContent(endDate, month, day);
-      endDateInput.style.display = 'none';
-    };
-
-    endDate.onclick = () => {
-      endDateInput.style.display = 'block';
-      endDateInput.focus();
-    };
-
     this._container.appendChild(startDate);
-    this._container.appendChild(startDateInput); // Append the hidden start date input
     sliderContainer.appendChild(slider);
     this._container.appendChild(sliderContainer);
     this._container.appendChild(endDate);
-    this._container.appendChild(endDateInput); // Append the hidden end date input
 
     return this._container;
   }
