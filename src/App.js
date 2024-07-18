@@ -123,7 +123,7 @@ const App = () => {
 
               map.easeTo({
                 center: features[0].geometry.coordinates,
-                zoom: zoom,
+                zoom: Math.min(zoom, 10), // Limit the zoom level to a maximum of 10
                 duration: 1300,
                 essential: true,
                 easing: (t) => t * (2 - t)
@@ -150,7 +150,7 @@ const App = () => {
 
           map.easeTo({
             center: coordinates,
-            zoom: 12, // Ensure zoom level is sufficient to clearly show the point
+            zoom: 10, // Reduce zoom level for unclustered points
             duration: 1600,
             essential: true,
             easing: (t) => t * (2 - t)
