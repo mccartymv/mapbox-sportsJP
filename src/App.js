@@ -50,8 +50,8 @@ const App = () => {
           type: 'geojson',
           data: geojson,
           cluster: true,
-          clusterMaxZoom: 12, // Max zoom to cluster points on
-          clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+          clusterMaxZoom: 14, // Adjust max zoom for clustering dynamically if needed
+          clusterRadius: 50 // Adjust radius for clustering dynamically if needed
         });
 
         map.addLayer({
@@ -77,7 +77,9 @@ const App = () => {
               30,
               750,
               40
-            ]
+            ],
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff'
           }
         });
 
@@ -114,17 +116,28 @@ const App = () => {
           map.getSource('games').getClusterExpansionZoom(
             clusterId,
             (err, zoom) => {
-              if (err) return;
+              if (err) {
+                console.error('Error getting cluster expansion zoom:', err);
+                return;
+              }
 
               map.easeTo({
                 center: features[0].geometry.coordinates,
-                  zoom: zoom,
-                  duration: 1300, // Duration of the animation in milliseconds
-                  essential: true, // Whether the animation is essential
-                  easing: (t) => t * (2 - t) // Custom easing function
+                zoom: zoom,
+                duration: 1300,
+                essential: true,
+                easing: (t) => t * (2 - t)
               });
             }
           );
+        });
+
+        map.on('mouseenter', 'clusters', () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'clusters', () => {
+          map.getCanvas().style.cursor = '';
         });
 
         map.on('click', 'unclustered-point', (e) => {
@@ -135,10 +148,26 @@ const App = () => {
             coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
           }
 
+          map.easeTo({
+            center: coordinates,
+            zoom: 12, // Ensure zoom level is sufficient to clearly show the point
+            duration: 1600,
+            essential: true,
+            easing: (t) => t * (2 - t)
+          });
+
           new mapboxgl.Popup()
             .setLngLat(coordinates)
             .setHTML(description)
             .addTo(map);
+        });
+
+        map.on('mouseenter', 'unclustered-point', () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'unclustered-point', () => {
+          map.getCanvas().style.cursor = '';
         });
 
         map.on('mouseenter', 'clusters', () => {
