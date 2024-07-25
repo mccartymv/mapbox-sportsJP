@@ -4,9 +4,11 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 class CustomButtonControl {
-  constructor(onStartDateChange, onEndDateChange) {
+  constructor(onStartDateChange, onEndDateChange, initialStartDate, initialEndDate) {
     this.onStartDateChange = onStartDateChange;
     this.onEndDateChange = onEndDateChange;
+    this.initialStartDate = initialStartDate;
+    this.initialEndDate = initialEndDate;
   }
 
   onAdd(map) {
@@ -35,14 +37,16 @@ class CustomButtonControl {
     };
 
     const startDate = document.createElement('div');
-    setDateContent(startDate, 'JUL', '10');
+    const { month: startMonth, day: startDay } = formatDate(this.initialStartDate);
+    setDateContent(startDate, startMonth, startDay);
     startDate.style.fontSize = '14px';
     startDate.style.padding = '5px';
     startDate.style.borderRight = '1px solid #ccc';
     startDate.style.cursor = 'pointer';
 
     const endDate = document.createElement('div');
-    setDateContent(endDate, 'JUL', '19');
+    const { month: endMonth, day: endDay } = formatDate(this.initialEndDate);
+    setDateContent(endDate, endMonth, endDay);
     endDate.style.fontSize = '14px';
     endDate.style.padding = '5px';
     endDate.style.borderLeft = '1px solid #ccc';
@@ -56,7 +60,7 @@ class CustomButtonControl {
         setDateContent(startDate, month, day);
         this.onStartDateChange(date);
       },
-      defaultDate: '2023-07-10',
+      defaultDate: this.initialStartDate,
     });
 
     flatpickr(endDate, {
@@ -67,7 +71,7 @@ class CustomButtonControl {
         setDateContent(endDate, month, day);
         this.onEndDateChange(date);
       },
-      defaultDate: '2023-07-19',
+      defaultDate: this.initialEndDate,
     });
 
     const sliderContainer = document.createElement('div');

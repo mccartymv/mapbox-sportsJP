@@ -13,8 +13,8 @@ const App = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredGames, setFilteredGames] = useState([]);
-  const [startDate, setStartDate] = useState(new Date('2023-07-10'));
-  const [endDate, setEndDate] = useState(new Date('2023-07-19'));
+  const [startDate, setStartDate] = useState(new Date('2024-07-10'));
+  const [endDate, setEndDate] = useState(new Date('2024-08-19'));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,11 +35,9 @@ const App = () => {
   useEffect(() => {
     if (games.length > 0) {
       const filtered = games.filter(game => {
-        const gameDate = moment(game.startTime); // Assume game.startTime is in ISO format or recognized by moment
-        // console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
+        const gameDate = moment(game.startTime);
         return gameDate.isValid() && gameDate.isBetween(startDate, endDate, null, '[]');
       });
-      // console.log('Filtered Games:', filtered);
       setFilteredGames(filtered);
     }
   }, [games, startDate, endDate]);
@@ -54,7 +52,7 @@ const App = () => {
       });
 
       mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      mapInstance.addControl(new CustomButtonControl(setStartDate, setEndDate), 'top-left');
+      mapInstance.addControl(new CustomButtonControl(setStartDate, setEndDate, startDate, endDate), 'top-left');
 
       mapInstance.on('load', () => {
         mapInstance.addSource('games', {
