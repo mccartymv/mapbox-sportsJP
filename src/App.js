@@ -49,11 +49,38 @@ const App = () => {
     filterGames();
   }, [games, startDate, endDate, filterGames]);
 
+  const updateMap = useCallback(() => {
+    if (map) {
+      const source = map.getSource('games');
+      if (source) {
+        const geojson = {
+          type: 'FeatureCollection',
+          features: filteredGames.map(game => ({
+            type: 'Feature',
+            properties: {
+              description: `${game.homeTeam} vs ${game.awayTeam} at ${game.venue.name}`
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: game.venue.coordinates.split(',').map(coord => parseFloat(coord.trim())).reverse()
+            }
+          }))
+        };
+        console.log('Updating map with geojson:', geojson);
+        source.setData(geojson);
+      } else {
+        console.error('Source "games" not found');
+      }
+    } else {
+      console.error('Map not initialized');
+    }
+  }, [map, filteredGames]);
+
   useEffect(() => {
     if (map) {
       updateMap();
     }
-  }, [filteredGames, map]);
+  }, [filteredGames, map, updateMap]);
 
   useEffect(() => {
     const initializeMap = () => {
@@ -196,33 +223,6 @@ const App = () => {
       initializeMap();
     }
   }, [map, startDate, endDate]);
-
-  const updateMap = () => {
-    if (map) {
-      const source = map.getSource('games');
-      if (source) {
-        const geojson = {
-          type: 'FeatureCollection',
-          features: filteredGames.map(game => ({
-            type: 'Feature',
-            properties: {
-              description: `${game.homeTeam} vs ${game.awayTeam} at ${game.venue.name}`
-            },
-            geometry: {
-              type: 'Point',
-              coordinates: game.venue.coordinates.split(',').map(coord => parseFloat(coord.trim())).reverse()
-            }
-          }))
-        };
-        console.log('Updating map with geojson:', geojson);
-        source.setData(geojson);
-      } else {
-        console.error('Source "games" not found');
-      }
-    } else {
-      console.error('Map not initialized');
-    }
-  };
 
   return (
     <div className="App">
