@@ -8,29 +8,45 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYWJhZG5hcjQ1IiwiYSI6ImNseTkwMWQ4cDBrcG8yanBuN
 
 const App = () => {
   const mapContainerRef = useRef(null);
+  const [map, setMap] = useState(null);
   const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const gameData = await getGames();
-      setGames(gameData);
+      try {
+        const gameData = await getGames();
+        setGames(gameData);
+      } catch (error) {
+        console.error('Error fetching game data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();
   }, []);
 
   useEffect(() => {
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/dark-v10',
-      center: [136, 35.5],
-      zoom: 4.2
-    });
+    if (!map) {
+      const initializeMap = () => {
+        const mapInstance = new mapboxgl.Map({
+          container: mapContainerRef.current,
+          style: 'mapbox://styles/mapbox/dark-v10',
+          center: [136, 35.5],
+          zoom: 4.2
+        });
 
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.addControl(new CustomButtonControl(), 'top-left');
+        mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        mapInstance.addControl(new CustomButtonControl(), 'top-left');
 
-    if (games.length > 0) {
+        setMap(mapInstance);
+      };
+
+      if (mapContainerRef.current) initializeMap();
+    }
+
+    if (map && games.length > 0) {
       const geojson = {
         type: 'FeatureCollection',
         features: games.map(game => ({
@@ -46,141 +62,130 @@ const App = () => {
       };
 
       map.on('load', () => {
-        map.addSource('games', {
-          type: 'geojson',
-          data: geojson,
-          cluster: true,
-          clusterMaxZoom: 14, // Adjust max zoom for clustering dynamically if needed
-          clusterRadius: 50 // Adjust radius for clustering dynamically if needed
-        });
-
-        map.addLayer({
-          id: 'clusters',
-          type: 'circle',
-          source: 'games',
-          filter: ['has', 'point_count'],
-          paint: {
-            'circle-color': [
-              'step',
-              ['get', 'point_count'],
-              '#51bbd6',
-              100,
-              '#f1f075',
-              750,
-              '#f28cb1'
-            ],
-            'circle-radius': [
-              'step',
-              ['get', 'point_count'],
-              20,
-              100,
-              30,
-              750,
-              40
-            ],
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#fff'
-          }
-        });
-
-        map.addLayer({
-          id: 'cluster-count',
-          type: 'symbol',
-          source: 'games',
-          filter: ['has', 'point_count'],
-          layout: {
-            'text-field': '{point_count_abbreviated}',
-            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-            'text-size': 12
-          }
-        });
-
-        map.addLayer({
-          id: 'unclustered-point',
-          type: 'circle',
-          source: 'games',
-          filter: ['!', ['has', 'point_count']],
-          paint: {
-            'circle-color': '#11b4da',
-            'circle-radius': 8,
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#fff'
-          }
-        });
-
-        map.on('click', 'clusters', (e) => {
-          const features = map.queryRenderedFeatures(e.point, {
-            layers: ['clusters']
+        if (!map.getSource('games')) {
+          map.addSource('games', {
+            type: 'geojson',
+            data: geojson,
+            cluster: true,
+            clusterMaxZoom: 14,
+            clusterRadius: 50
           });
-          const clusterId = features[0].properties.cluster_id;
-          map.getSource('games').getClusterExpansionZoom(
-            clusterId,
-            (err, zoom) => {
-              if (err) {
-                console.error('Error getting cluster expansion zoom:', err);
-                return;
-              }
 
-              map.easeTo({
-                center: features[0].geometry.coordinates,
-                zoom: Math.min(zoom, 10), // Limit the zoom level to a maximum of 10
-                duration: 1300,
-                essential: true,
-                easing: (t) => t * (2 - t)
-              });
+          map.addLayer({
+            id: 'clusters',
+            type: 'circle',
+            source: 'games',
+            filter: ['has', 'point_count'],
+            paint: {
+              'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6',
+                100,
+                '#f1f075',
+                750,
+                '#f28cb1'
+              ],
+              'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                20,
+                100,
+                30,
+                750,
+                40
+              ],
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#fff'
             }
-          );
-        });
-
-        map.on('mouseenter', 'clusters', () => {
-          map.getCanvas().style.cursor = 'pointer';
-        });
-
-        map.on('mouseleave', 'clusters', () => {
-          map.getCanvas().style.cursor = '';
-        });
-
-        map.on('click', 'unclustered-point', (e) => {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const description = e.features[0].properties.description;
-
-          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          }
-
-          map.easeTo({
-            center: coordinates,
-            zoom: 10, // Reduce zoom level for unclustered points
-            duration: 1600,
-            essential: true,
-            easing: (t) => t * (2 - t)
           });
 
-          new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(description)
-            .addTo(map);
-        });
+          map.addLayer({
+            id: 'cluster-count',
+            type: 'symbol',
+            source: 'games',
+            filter: ['has', 'point_count'],
+            layout: {
+              'text-field': '{point_count_abbreviated}',
+              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+              'text-size': 12
+            }
+          });
 
-        map.on('mouseenter', 'unclustered-point', () => {
-          map.getCanvas().style.cursor = 'pointer';
-        });
+          map.addLayer({
+            id: 'unclustered-point',
+            type: 'circle',
+            source: 'games',
+            filter: ['!', ['has', 'point_count']],
+            paint: {
+              'circle-color': '#11b4da',
+              'circle-radius': 8,
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#fff'
+            }
+          });
 
-        map.on('mouseleave', 'unclustered-point', () => {
-          map.getCanvas().style.cursor = '';
-        });
+          map.on('click', 'clusters', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
+              layers: ['clusters']
+            });
+            const clusterId = features[0].properties.cluster_id;
+            map.getSource('games').getClusterExpansionZoom(
+              clusterId,
+              (err, zoom) => {
+                if (err) {
+                  console.error('Error getting cluster expansion zoom:', err);
+                  return;
+                }
 
-        map.on('mouseenter', 'clusters', () => {
-          map.getCanvas().style.cursor = 'pointer';
-        });
-        map.on('mouseleave', 'clusters', () => {
-          map.getCanvas().style.cursor = '';
-        });
+                map.easeTo({
+                  center: features[0].geometry.coordinates,
+                  zoom: Math.min(zoom, 10),
+                  duration: 1300,
+                  essential: true,
+                  easing: (t) => t * (2 - t)
+                });
+              }
+            );
+          });
+
+          const setCursorPointer = () => map.getCanvas().style.cursor = 'pointer';
+          const resetCursor = () => map.getCanvas().style.cursor = '';
+
+          map.on('mouseenter', 'clusters', setCursorPointer);
+          map.on('mouseleave', 'clusters', resetCursor);
+
+          map.on('click', 'unclustered-point', (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
+
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            map.easeTo({
+              center: coordinates,
+              zoom: 10,
+              duration: 1600,
+              essential: true,
+              easing: (t) => t * (2 - t)
+            });
+
+            new mapboxgl.Popup()
+              .setLngLat(coordinates)
+              .setHTML(description)
+              .addTo(map);
+          });
+
+          map.on('mouseenter', 'unclustered-point', setCursorPointer);
+          map.on('mouseleave', 'unclustered-point', resetCursor);
+        } else {
+          const source = map.getSource('games');
+          source.setData(geojson);
+        }
       });
     }
-
-    return () => map.remove();
-  }, [games]);
+  }, [map, games]);
 
   return (
     <div className="App">
@@ -190,6 +195,7 @@ const App = () => {
         </div>
       </header>
       <div className="map-container" ref={mapContainerRef} />
+      {loading && <div className="loading">Loading...</div>}
       <div className="footer">
         <div className="footer-links">
           <a href="/terms" className="unselectable">Terms and Conditions</a>
