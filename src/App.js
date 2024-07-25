@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import './App.css';
 import { getGames } from './GameService';
 import CustomButtonControl from './CustomButtonControl';
+import moment from 'moment';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWJhZG5hcjQ1IiwiYSI6ImNseTkwMWQ4cDBrcG8yanBuNmV4ZnJiZDQifQ.EkfYeLvS7KYopWt5ULdZ9g';
 
@@ -19,6 +20,7 @@ const App = () => {
     const fetchData = async () => {
       try {
         const gameData = await getGames();
+        console.log('Fetched Games:', gameData);
         setGames(gameData);
       } catch (error) {
         console.error('Error fetching game data:', error);
@@ -33,9 +35,9 @@ const App = () => {
   useEffect(() => {
     if (games.length > 0) {
       const filtered = games.filter(game => {
-        const gameDate = new Date(game.date); // Assume game.date is in a format recognized by Date constructor
-        console.log(`Game Date: ${gameDate}, Start Date: ${startDate}, End Date: ${endDate}`);
-        return gameDate >= startDate && gameDate <= endDate;
+        const gameDate = moment(game.startTime, 'YYYY-MM-DD'); // Adjust format based on your data
+        console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
+        return gameDate.isValid() && gameDate.isBetween(startDate, endDate, null, '[]');
       });
       console.log('Filtered Games:', filtered);
       setFilteredGames(filtered);
