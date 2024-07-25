@@ -35,7 +35,7 @@ const App = () => {
   useEffect(() => {
     if (games.length > 0) {
       const filtered = games.filter(game => {
-        const gameDate = moment(game.startTime, 'YYYY-MM-DD'); // Adjust format based on your data
+        const gameDate = moment(game.startTime); // Assume game.startTime is in ISO format or recognized by moment
         console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
         return gameDate.isValid() && gameDate.isBetween(startDate, endDate, null, '[]');
       });
@@ -45,162 +45,162 @@ const App = () => {
   }, [games, startDate, endDate]);
 
   useEffect(() => {
-    if (!map) {
-      const initializeMap = () => {
-        const mapInstance = new mapboxgl.Map({
-          container: mapContainerRef.current,
-          style: 'mapbox://styles/mapbox/dark-v10',
-          center: [136, 35.5],
-          zoom: 4.2
+    const initializeMap = () => {
+      const mapInstance = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/dark-v10',
+        center: [136, 35.5],
+        zoom: 4.2
+      });
+
+      mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      mapInstance.addControl(new CustomButtonControl(setStartDate, setEndDate), 'top-left');
+
+      mapInstance.on('load', () => {
+        mapInstance.addSource('games', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: []
+          },
+          cluster: true,
+          clusterMaxZoom: 14,
+          clusterRadius: 50
         });
 
-        mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        mapInstance.addControl(new CustomButtonControl(setStartDate, setEndDate), 'top-left');
-
-        setMap(mapInstance);
-      };
-
-      if (mapContainerRef.current) initializeMap();
-    }
-
-    if (map && filteredGames.length > 0) {
-      const geojson = {
-        type: 'FeatureCollection',
-        features: filteredGames.map(game => ({
-          type: 'Feature',
-          properties: {
-            description: `${game.homeTeam} vs ${game.awayTeam} at ${game.venue.name}`
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: game.venue.coordinates.split(',').map(coord => parseFloat(coord.trim())).reverse()
+        mapInstance.addLayer({
+          id: 'clusters',
+          type: 'circle',
+          source: 'games',
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': [
+              'step',
+              ['get', 'point_count'],
+              '#51bbd6',
+              100,
+              '#f1f075',
+              750,
+              '#f28cb1'
+            ],
+            'circle-radius': [
+              'step',
+              ['get', 'point_count'],
+              20,
+              100,
+              30,
+              750,
+              40
+            ],
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff'
           }
-        }))
-      };
+        });
 
-      map.on('load', () => {
-        if (!map.getSource('games')) {
-          map.addSource('games', {
-            type: 'geojson',
-            data: geojson,
-            cluster: true,
-            clusterMaxZoom: 14,
-            clusterRadius: 50
+        mapInstance.addLayer({
+          id: 'cluster-count',
+          type: 'symbol',
+          source: 'games',
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 12
+          }
+        });
+
+        mapInstance.addLayer({
+          id: 'unclustered-point',
+          type: 'circle',
+          source: 'games',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': '#11b4da',
+            'circle-radius': 8,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff'
+          }
+        });
+
+        mapInstance.on('click', 'clusters', (e) => {
+          const features = mapInstance.queryRenderedFeatures(e.point, {
+            layers: ['clusters']
           });
-
-          map.addLayer({
-            id: 'clusters',
-            type: 'circle',
-            source: 'games',
-            filter: ['has', 'point_count'],
-            paint: {
-              'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                100,
-                '#f1f075',
-                750,
-                '#f28cb1'
-              ],
-              'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                100,
-                30,
-                750,
-                40
-              ],
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#fff'
-            }
-          });
-
-          map.addLayer({
-            id: 'cluster-count',
-            type: 'symbol',
-            source: 'games',
-            filter: ['has', 'point_count'],
-            layout: {
-              'text-field': '{point_count_abbreviated}',
-              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-              'text-size': 12
-            }
-          });
-
-          map.addLayer({
-            id: 'unclustered-point',
-            type: 'circle',
-            source: 'games',
-            filter: ['!', ['has', 'point_count']],
-            paint: {
-              'circle-color': '#11b4da',
-              'circle-radius': 8,
-              'circle-stroke-width': 1,
-              'circle-stroke-color': '#fff'
-            }
-          });
-
-          map.on('click', 'clusters', (e) => {
-            const features = map.queryRenderedFeatures(e.point, {
-              layers: ['clusters']
-            });
-            const clusterId = features[0].properties.cluster_id;
-            map.getSource('games').getClusterExpansionZoom(
-              clusterId,
-              (err, zoom) => {
-                if (err) {
-                  console.error('Error getting cluster expansion zoom:', err);
-                  return;
-                }
-
-                map.easeTo({
-                  center: features[0].geometry.coordinates,
-                  zoom: Math.min(zoom, 10),
-                  duration: 1300,
-                  essential: true,
-                  easing: (t) => t * (2 - t)
-                });
+          const clusterId = features[0].properties.cluster_id;
+          mapInstance.getSource('games').getClusterExpansionZoom(
+            clusterId,
+            (err, zoom) => {
+              if (err) {
+                console.error('Error getting cluster expansion zoom:', err);
+                return;
               }
-            );
-          });
 
-          const setCursorPointer = () => map.getCanvas().style.cursor = 'pointer';
-          const resetCursor = () => map.getCanvas().style.cursor = '';
-
-          map.on('mouseenter', 'clusters', setCursorPointer);
-          map.on('mouseleave', 'clusters', resetCursor);
-
-          map.on('click', 'unclustered-point', (e) => {
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            const description = e.features[0].properties.description;
-
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+              mapInstance.easeTo({
+                center: features[0].geometry.coordinates,
+                zoom: Math.min(zoom, 10),
+                duration: 1300,
+                essential: true,
+                easing: (t) => t * (2 - t)
+              });
             }
+          );
+        });
 
-            map.easeTo({
-              center: coordinates,
-              zoom: 10,
-              duration: 1600,
-              essential: true,
-              easing: (t) => t * (2 - t)
-            });
+        const setCursorPointer = () => mapInstance.getCanvas().style.cursor = 'pointer';
+        const resetCursor = () => mapInstance.getCanvas().style.cursor = '';
 
-            new mapboxgl.Popup()
-              .setLngLat(coordinates)
-              .setHTML(description)
-              .addTo(map);
+        mapInstance.on('mouseenter', 'clusters', setCursorPointer);
+        mapInstance.on('mouseleave', 'clusters', resetCursor);
+
+        mapInstance.on('click', 'unclustered-point', (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const description = e.features[0].properties.description;
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          mapInstance.easeTo({
+            center: coordinates,
+            zoom: 10,
+            duration: 1600,
+            essential: true,
+            easing: (t) => t * (2 - t)
           });
 
-          map.on('mouseenter', 'unclustered-point', setCursorPointer);
-          map.on('mouseleave', 'unclustered-point', resetCursor);
-        } else {
-          const source = map.getSource('games');
-          source.setData(geojson);
-        }
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(mapInstance);
+        });
+
+        mapInstance.on('mouseenter', 'unclustered-point', setCursorPointer);
+        mapInstance.on('mouseleave', 'unclustered-point', resetCursor);
       });
+
+      setMap(mapInstance);
+    };
+
+    if (!map) {
+      initializeMap();
+    } else if (filteredGames.length > 0) {
+      const source = map.getSource('games');
+      if (source) {
+        const geojson = {
+          type: 'FeatureCollection',
+          features: filteredGames.map(game => ({
+            type: 'Feature',
+            properties: {
+              description: `${game.homeTeam} vs ${game.awayTeam} at ${game.venue.name}`
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: game.venue.coordinates.split(',').map(coord => parseFloat(coord.trim())).reverse()
+            }
+          }))
+        };
+        source.setData(geojson);
+      }
     }
   }, [map, filteredGames]);
 
