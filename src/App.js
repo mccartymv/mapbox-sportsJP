@@ -20,7 +20,7 @@ const App = () => {
     const fetchData = async () => {
       try {
         const gameData = await getGames();
-        // console.log('Fetched Games:', gameData);
+        console.log('Fetched Games:', gameData);
         setGames(gameData);
       } catch (error) {
         console.error('Error fetching game data:', error);
@@ -32,15 +32,30 @@ const App = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (games.length > 0) {
+  const filterGames = () => {
+    if (games.length > 0 && startDate && endDate) {
+      console.log(`Filtering games between ${startDate} and ${endDate}`);
       const filtered = games.filter(game => {
         const gameDate = moment(game.startTime);
+        console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
         return gameDate.isValid() && gameDate.isBetween(startDate, endDate, null, '[]');
       });
+      console.log('Filtered Games:', filtered);
       setFilteredGames(filtered);
     }
-  }, [games, startDate, endDate]);
+  };
+
+  useEffect(() => {
+    if (games.length > 0 && map) {
+      filterGames();
+    }
+  }, [games, map]);
+
+  useEffect(() => {
+    if (map) {
+      updateMap();
+    }
+  }, [filteredGames]);
 
   useEffect(() => {
     const initializeMap = () => {
@@ -174,14 +189,18 @@ const App = () => {
 
         mapInstance.on('mouseenter', 'unclustered-point', setCursorPointer);
         mapInstance.on('mouseleave', 'unclustered-point', resetCursor);
-      });
 
-      setMap(mapInstance);
+        setMap(mapInstance); // Set map only after it's fully loaded
+      });
     };
 
     if (!map) {
       initializeMap();
-    } else if (filteredGames.length > 0) {
+    }
+  }, [map]);
+
+  const updateMap = () => {
+    if (map && filteredGames.length > 0) {
       const source = map.getSource('games');
       if (source) {
         const geojson = {
@@ -197,10 +216,11 @@ const App = () => {
             }
           }))
         };
+        console.log('Updating map with geojson:', geojson);
         source.setData(geojson);
       }
     }
-  }, [map, filteredGames]);
+  };
 
   return (
     <div className="App">
