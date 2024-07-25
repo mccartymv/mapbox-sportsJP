@@ -1,5 +1,3 @@
-import React from 'react';
-import mapboxgl from 'mapbox-gl';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 

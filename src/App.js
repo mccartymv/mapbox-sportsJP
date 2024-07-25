@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import './App.css';
 import { getGames } from './GameService';
@@ -32,7 +32,7 @@ const App = () => {
     fetchData();
   }, []);
 
-  const filterGames = () => {
+  const filterGames = useCallback(() => {
     if (games.length > 0 && startDate && endDate) {
       console.log(`Filtering games between ${startDate} and ${endDate}`);
       const filtered = games.filter(game => {
@@ -43,19 +43,17 @@ const App = () => {
       console.log('Filtered Games:', filtered);
       setFilteredGames(filtered);
     }
-  };
+  }, [games, startDate, endDate]);
 
   useEffect(() => {
-    if (games.length > 0 && map) {
-      filterGames();
-    }
-  }, [games, map]);
+    filterGames();
+  }, [games, startDate, endDate, filterGames]);
 
   useEffect(() => {
     if (map) {
       updateMap();
     }
-  }, [filteredGames]);
+  }, [filteredGames, map]);
 
   useEffect(() => {
     const initializeMap = () => {
@@ -197,10 +195,10 @@ const App = () => {
     if (!map) {
       initializeMap();
     }
-  }, [map]);
+  }, [map, startDate, endDate]);
 
   const updateMap = () => {
-    if (map && filteredGames.length > 0) {
+    if (map) {
       const source = map.getSource('games');
       if (source) {
         const geojson = {
@@ -218,7 +216,11 @@ const App = () => {
         };
         console.log('Updating map with geojson:', geojson);
         source.setData(geojson);
+      } else {
+        console.error('Source "games" not found');
       }
+    } else {
+      console.error('Map not initialized');
     }
   };
 
