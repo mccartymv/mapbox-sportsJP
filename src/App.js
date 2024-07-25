@@ -20,7 +20,7 @@ const App = () => {
     const fetchData = async () => {
       try {
         const gameData = await getGames();
-        console.log('Fetched Games:', gameData);
+        // console.log('Fetched Games:', gameData);
         setGames(gameData);
       } catch (error) {
         console.error('Error fetching game data:', error);
@@ -36,10 +36,10 @@ const App = () => {
     if (games.length > 0) {
       const filtered = games.filter(game => {
         const gameDate = moment(game.startTime); // Assume game.startTime is in ISO format or recognized by moment
-        console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
+        // console.log(`Game Date: ${gameDate.format()}, Start Date: ${moment(startDate).format()}, End Date: ${moment(endDate).format()}`);
         return gameDate.isValid() && gameDate.isBetween(startDate, endDate, null, '[]');
       });
-      console.log('Filtered Games:', filtered);
+      // console.log('Filtered Games:', filtered);
       setFilteredGames(filtered);
     }
   }, [games, startDate, endDate]);
