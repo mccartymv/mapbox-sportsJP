@@ -4,6 +4,11 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 class CustomButtonControl {
+  constructor(onStartDateChange, onEndDateChange) {
+    this.onStartDateChange = onStartDateChange;
+    this.onEndDateChange = onEndDateChange;
+  }
+
   onAdd(map) {
     this._map = map;
     this._container = document.createElement('div');
@@ -15,7 +20,6 @@ class CustomButtonControl {
     this._container.style.border = '1px solid #ccc';
     this._container.style.borderRadius = '5px';
 
-    // Helper function to set date content
     const setDateContent = (element, month, day) => {
       element.innerHTML = `<div style="text-align: center;">
         <div style="font-size: 20px; font-weight: bold;">${month}</div>
@@ -23,7 +27,6 @@ class CustomButtonControl {
       </div>`;
     };
 
-    // Helper function to format date
     const formatDate = (date) => {
       return {
         month: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
@@ -31,7 +34,6 @@ class CustomButtonControl {
       };
     };
 
-    // Start Date
     const startDate = document.createElement('div');
     setDateContent(startDate, 'JUL', '10');
     startDate.style.fontSize = '14px';
@@ -39,7 +41,6 @@ class CustomButtonControl {
     startDate.style.borderRight = '1px solid #ccc';
     startDate.style.cursor = 'pointer';
 
-    // End Date
     const endDate = document.createElement('div');
     setDateContent(endDate, 'JUL', '19');
     endDate.style.fontSize = '14px';
@@ -47,36 +48,34 @@ class CustomButtonControl {
     endDate.style.borderLeft = '1px solid #ccc';
     endDate.style.cursor = 'pointer';
 
-    // Initialize flatpickr for start date
     flatpickr(startDate, {
       onChange: (selectedDates) => {
         const date = selectedDates[0];
-        date.setHours(date.getHours() + 12); // Set time to noon
+        date.setHours(date.getHours() + 12);
         const { month, day } = formatDate(date);
         setDateContent(startDate, month, day);
+        this.onStartDateChange(date);
       },
-      defaultDate: '2023-07-10', // Set a default date if needed
+      defaultDate: '2023-07-10',
     });
 
-    // Initialize flatpickr for end date
     flatpickr(endDate, {
       onChange: (selectedDates) => {
         const date = selectedDates[0];
-        date.setHours(date.getHours() + 12); // Set time to noon
+        date.setHours(date.getHours() + 12);
         const { month, day } = formatDate(date);
         setDateContent(endDate, month, day);
+        this.onEndDateChange(date);
       },
-      defaultDate: '2023-07-19', // Set a default date if needed
+      defaultDate: '2023-07-19',
     });
 
-    // Slider Container
     const sliderContainer = document.createElement('div');
     sliderContainer.style.display = 'flex';
     sliderContainer.style.alignItems = 'center';
     sliderContainer.style.flexGrow = '1';
     sliderContainer.style.padding = '0 10px';
 
-    // Slider
     const slider = document.createElement('div');
     slider.style.height = '10px';
     slider.style.width = '100%';

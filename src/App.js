@@ -11,6 +11,9 @@ const App = () => {
   const [map, setMap] = useState(null);
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filteredGames, setFilteredGames] = useState([]);
+  const [startDate, setStartDate] = useState(new Date('2023-07-10'));
+  const [endDate, setEndDate] = useState(new Date('2023-07-19'));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,6 +31,18 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (games.length > 0) {
+      const filtered = games.filter(game => {
+        const gameDate = new Date(game.date); // Assume game.date is in a format recognized by Date constructor
+        console.log(`Game Date: ${gameDate}, Start Date: ${startDate}, End Date: ${endDate}`);
+        return gameDate >= startDate && gameDate <= endDate;
+      });
+      console.log('Filtered Games:', filtered);
+      setFilteredGames(filtered);
+    }
+  }, [games, startDate, endDate]);
+
+  useEffect(() => {
     if (!map) {
       const initializeMap = () => {
         const mapInstance = new mapboxgl.Map({
@@ -38,7 +53,7 @@ const App = () => {
         });
 
         mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        mapInstance.addControl(new CustomButtonControl(), 'top-left');
+        mapInstance.addControl(new CustomButtonControl(setStartDate, setEndDate), 'top-left');
 
         setMap(mapInstance);
       };
@@ -46,10 +61,10 @@ const App = () => {
       if (mapContainerRef.current) initializeMap();
     }
 
-    if (map && games.length > 0) {
+    if (map && filteredGames.length > 0) {
       const geojson = {
         type: 'FeatureCollection',
-        features: games.map(game => ({
+        features: filteredGames.map(game => ({
           type: 'Feature',
           properties: {
             description: `${game.homeTeam} vs ${game.awayTeam} at ${game.venue.name}`
@@ -185,7 +200,7 @@ const App = () => {
         }
       });
     }
-  }, [map, games]);
+  }, [map, filteredGames]);
 
   return (
     <div className="App">
